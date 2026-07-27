@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CNC_MILL]
+Title: Delayed maintenance nearly caused unplanned downtime
+
+Machine had gone 48 days since last maintenance (past the 45-day upper bound in SOP-002) when a strong vibration trend was flagged. Inspection found advanced spindle bearing wear, close to the failure threshold described in the manual. Bearing replaced just ahead of what likely would have been an unplanned failure.

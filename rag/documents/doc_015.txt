@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CONVEYOR]
+Title: Drive belt misalignment corrected during scheduled maintenance
+
+Routine 40-day maintenance check found early-stage belt misalignment, not yet reflected in a strong sensor trend. Belt realigned and tensioned. Flagged as a good example of catching an issue before it produced a measurable sensor drift.

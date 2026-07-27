@@ -1,0 +1,19 @@
+[doc_type: sop] [machine_type: GENERAL]
+Title: SOP-001: Lockout/Tagout Procedure Before Maintenance
+
+SOP-001: Lockout/Tagout (LOTO) Procedure
+
+Before performing any maintenance on plant equipment:
+1. Notify all affected personnel that maintenance is beginning.
+2. Identify all energy sources (electrical, hydraulic, pneumatic) for the equipment.
+3. Shut down the equipment using the normal stop procedure.
+4. Isolate each energy source and apply a lock and tag at each isolation point.
+5. Verify zero energy state by attempting a normal start (with lock in place) and
+   confirming the equipment does not activate.
+6. Perform the required maintenance.
+7. After maintenance, remove tools, reinstall guards, and confirm the area is clear
+   before removing locks and tags in reverse order.
+
+No maintenance task, however brief, is exempt from this procedure. Skipping LOTO for
+"quick" fixes is the single most common root cause of maintenance-related injuries
+plant-wide.

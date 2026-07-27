@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CONVEYOR]
+Title: Belt failure after delayed maintenance window
+
+Machine was 52 days since last maintenance (12 days past the standard window) when vibration trend crossed the elevated-risk threshold. Inspection found advanced belt wear; belt failed completely two days after the alert during attempted continued operation. Replaced belt and drive pulley. Recommend stricter enforcement of the 40-day maintenance window going forward.

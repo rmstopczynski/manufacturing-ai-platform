@@ -1,0 +1,170 @@
+[
+  {
+    "doc_id": "doc_001",
+    "doc_type": "manual",
+    "machine_type": "CNC_MILL",
+    "title": "CNC Milling Machine \u2014 Equipment Manual (Section 4: Operating Parameters)",
+    "body": "CNC Milling Machine Equipment Manual\nSection 4: Operating Parameters and Warning Signs\n\nNormal operating range: operating temperature 50-60\u00b0C, vibration 1.5-2.5 mm/s. Readings outside this range for more than a few\nconsecutive readings should be logged and reviewed at the next maintenance check.\n\nThe most common failure mode for this equipment class is spindle bearing wear. Early indicators\ninclude a gradual upward trend in vibration readings over 2-4 weeks, increasing\nday-to-day variability in temperature (not just a higher average, but less\nconsistency reading to reading), and audible changes in operating noise.\n\nIf vibration readings show a sustained upward trend combined with rising temperature\nvolatility, schedule an inspection within 7 days even if individual readings remain\nwithin nominal range \u2014 the trend itself is the warning sign, not any single reading.\n\nDo not wait for a hard threshold breach before inspecting. Machines in this class have\nhistorically failed while individual sensor readings were still inside the \"normal\"\nrange, because the drift toward failure happens gradually enough that no single\nreading looks alarming in isolation."
+  },
+  {
+    "doc_id": "doc_002",
+    "doc_type": "manual",
+    "machine_type": "CONVEYOR",
+    "title": "Conveyor System \u2014 Equipment Manual (Section 4: Operating Parameters)",
+    "body": "Conveyor System Equipment Manual\nSection 4: Operating Parameters and Warning Signs\n\nNormal operating range: operating temperature 36-44\u00b0C, vibration 0.9-1.5 mm/s. Readings outside this range for more than a few\nconsecutive readings should be logged and reviewed at the next maintenance check.\n\nThe most common failure mode for this equipment class is drive belt misalignment. Early indicators\ninclude a gradual upward trend in vibration readings over 2-4 weeks, increasing\nday-to-day variability in temperature (not just a higher average, but less\nconsistency reading to reading), and audible changes in operating noise.\n\nIf vibration readings show a sustained upward trend combined with rising temperature\nvolatility, schedule an inspection within 7 days even if individual readings remain\nwithin nominal range \u2014 the trend itself is the warning sign, not any single reading.\n\nDo not wait for a hard threshold breach before inspecting. Machines in this class have\nhistorically failed while individual sensor readings were still inside the \"normal\"\nrange, because the drift toward failure happens gradually enough that no single\nreading looks alarming in isolation."
+  },
+  {
+    "doc_id": "doc_003",
+    "doc_type": "manual",
+    "machine_type": "PRESS",
+    "title": "Hydraulic Press \u2014 Equipment Manual (Section 4: Operating Parameters)",
+    "body": "Hydraulic Press Equipment Manual\nSection 4: Operating Parameters and Warning Signs\n\nNormal operating range: operating temperature 58-72\u00b0C, vibration 2.4-3.6 mm/s. Readings outside this range for more than a few\nconsecutive readings should be logged and reviewed at the next maintenance check.\n\nThe most common failure mode for this equipment class is hydraulic seal degradation. Early indicators\ninclude a gradual upward trend in vibration readings over 2-4 weeks, increasing\nday-to-day variability in temperature (not just a higher average, but less\nconsistency reading to reading), and audible changes in operating noise.\n\nIf vibration readings show a sustained upward trend combined with rising temperature\nvolatility, schedule an inspection within 7 days even if individual readings remain\nwithin nominal range \u2014 the trend itself is the warning sign, not any single reading.\n\nDo not wait for a hard threshold breach before inspecting. Machines in this class have\nhistorically failed while individual sensor readings were still inside the \"normal\"\nrange, because the drift toward failure happens gradually enough that no single\nreading looks alarming in isolation."
+  },
+  {
+    "doc_id": "doc_004",
+    "doc_type": "manual",
+    "machine_type": "ROBOT_ARM",
+    "title": "Robotic Arm \u2014 Equipment Manual (Section 4: Operating Parameters)",
+    "body": "Robotic Arm Equipment Manual\nSection 4: Operating Parameters and Warning Signs\n\nNormal operating range: operating temperature 42-54\u00b0C, vibration 1.1-1.9 mm/s. Readings outside this range for more than a few\nconsecutive readings should be logged and reviewed at the next maintenance check.\n\nThe most common failure mode for this equipment class is joint actuator wear. Early indicators\ninclude a gradual upward trend in vibration readings over 2-4 weeks, increasing\nday-to-day variability in temperature (not just a higher average, but less\nconsistency reading to reading), and audible changes in operating noise.\n\nIf vibration readings show a sustained upward trend combined with rising temperature\nvolatility, schedule an inspection within 7 days even if individual readings remain\nwithin nominal range \u2014 the trend itself is the warning sign, not any single reading.\n\nDo not wait for a hard threshold breach before inspecting. Machines in this class have\nhistorically failed while individual sensor readings were still inside the \"normal\"\nrange, because the drift toward failure happens gradually enough that no single\nreading looks alarming in isolation."
+  },
+  {
+    "doc_id": "doc_005",
+    "doc_type": "manual",
+    "machine_type": "PUMP",
+    "title": "Industrial Pump \u2014 Equipment Manual (Section 4: Operating Parameters)",
+    "body": "Industrial Pump Equipment Manual\nSection 4: Operating Parameters and Warning Signs\n\nNormal operating range: operating temperature 54-66\u00b0C, vibration 2.0-3.0 mm/s. Readings outside this range for more than a few\nconsecutive readings should be logged and reviewed at the next maintenance check.\n\nThe most common failure mode for this equipment class is impeller cavitation and bearing wear. Early indicators\ninclude a gradual upward trend in vibration readings over 2-4 weeks, increasing\nday-to-day variability in temperature (not just a higher average, but less\nconsistency reading to reading), and audible changes in operating noise.\n\nIf vibration readings show a sustained upward trend combined with rising temperature\nvolatility, schedule an inspection within 7 days even if individual readings remain\nwithin nominal range \u2014 the trend itself is the warning sign, not any single reading.\n\nDo not wait for a hard threshold breach before inspecting. Machines in this class have\nhistorically failed while individual sensor readings were still inside the \"normal\"\nrange, because the drift toward failure happens gradually enough that no single\nreading looks alarming in isolation."
+  },
+  {
+    "doc_id": "doc_006",
+    "doc_type": "sop",
+    "machine_type": "GENERAL",
+    "title": "SOP-001: Lockout/Tagout Procedure Before Maintenance",
+    "body": "SOP-001: Lockout/Tagout (LOTO) Procedure\n\nBefore performing any maintenance on plant equipment:\n1. Notify all affected personnel that maintenance is beginning.\n2. Identify all energy sources (electrical, hydraulic, pneumatic) for the equipment.\n3. Shut down the equipment using the normal stop procedure.\n4. Isolate each energy source and apply a lock and tag at each isolation point.\n5. Verify zero energy state by attempting a normal start (with lock in place) and\n   confirming the equipment does not activate.\n6. Perform the required maintenance.\n7. After maintenance, remove tools, reinstall guards, and confirm the area is clear\n   before removing locks and tags in reverse order.\n\nNo maintenance task, however brief, is exempt from this procedure. Skipping LOTO for\n\"quick\" fixes is the single most common root cause of maintenance-related injuries\nplant-wide."
+  },
+  {
+    "doc_id": "doc_007",
+    "doc_type": "sop",
+    "machine_type": "GENERAL",
+    "title": "SOP-002: Routine Maintenance Scheduling",
+    "body": "SOP-002: Routine Maintenance Scheduling\n\nStandard maintenance intervals are set at 30-45 days for most rotating and hydraulic\nequipment, tracked via days-since-last-maintenance. Equipment approaching or exceeding\n40 days since last maintenance should be prioritized for the next scheduled window,\neven if sensor readings currently look nominal \u2014 maintenance intervals are a\npreventive measure, not a reactive one.\n\nWhen a machine is flagged by the predictive maintenance system as elevated-risk,\nits maintenance should be moved up regardless of where it falls in the normal\nrotation, and the technician should be given the specific sensor trend that\ntriggered the flag (not just \"elevated risk\") so they know what to inspect first."
+  },
+  {
+    "doc_id": "doc_008",
+    "doc_type": "sop",
+    "machine_type": "CNC_MILL",
+    "title": "SOP-Troubleshooting-CNC_MILL: Responding to Elevated Vibration or Temperature",
+    "body": "SOP-Troubleshooting-CNC_MILL: Responding to Elevated Vibration/Temperature Alerts on CNC Milling Machines\n\n1. Confirm the alert against the live sensor dashboard \u2014 check whether the trend is\n   isolated to one reading (likely a sensor glitch) or sustained over multiple days\n   (likely a real mechanical issue).\n2. Cross-reference days-since-last-maintenance. A machine well past its maintenance\n   window showing a sustained trend is higher priority than one recently serviced.\n3. The dominant failure mode for CNC Milling Machines is spindle bearing wear. Inspect the corresponding\n   component first before broader diagnostics.\n4. If the trend matches the pre-failure pattern described in the equipment manual\n   (rising vibration, increasing temperature variability), schedule inspection within\n   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.\n5. Log findings in the maintenance log regardless of outcome, including cases where\n   inspection found no issue \u2014 this data improves future predictions."
+  },
+  {
+    "doc_id": "doc_009",
+    "doc_type": "sop",
+    "machine_type": "CONVEYOR",
+    "title": "SOP-Troubleshooting-CONVEYOR: Responding to Elevated Vibration or Temperature",
+    "body": "SOP-Troubleshooting-CONVEYOR: Responding to Elevated Vibration/Temperature Alerts on Conveyor Systems\n\n1. Confirm the alert against the live sensor dashboard \u2014 check whether the trend is\n   isolated to one reading (likely a sensor glitch) or sustained over multiple days\n   (likely a real mechanical issue).\n2. Cross-reference days-since-last-maintenance. A machine well past its maintenance\n   window showing a sustained trend is higher priority than one recently serviced.\n3. The dominant failure mode for Conveyor Systems is drive belt misalignment. Inspect the corresponding\n   component first before broader diagnostics.\n4. If the trend matches the pre-failure pattern described in the equipment manual\n   (rising vibration, increasing temperature variability), schedule inspection within\n   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.\n5. Log findings in the maintenance log regardless of outcome, including cases where\n   inspection found no issue \u2014 this data improves future predictions."
+  },
+  {
+    "doc_id": "doc_010",
+    "doc_type": "sop",
+    "machine_type": "PRESS",
+    "title": "SOP-Troubleshooting-PRESS: Responding to Elevated Vibration or Temperature",
+    "body": "SOP-Troubleshooting-PRESS: Responding to Elevated Vibration/Temperature Alerts on Hydraulic Presss\n\n1. Confirm the alert against the live sensor dashboard \u2014 check whether the trend is\n   isolated to one reading (likely a sensor glitch) or sustained over multiple days\n   (likely a real mechanical issue).\n2. Cross-reference days-since-last-maintenance. A machine well past its maintenance\n   window showing a sustained trend is higher priority than one recently serviced.\n3. The dominant failure mode for Hydraulic Presss is hydraulic seal degradation. Inspect the corresponding\n   component first before broader diagnostics.\n4. If the trend matches the pre-failure pattern described in the equipment manual\n   (rising vibration, increasing temperature variability), schedule inspection within\n   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.\n5. Log findings in the maintenance log regardless of outcome, including cases where\n   inspection found no issue \u2014 this data improves future predictions."
+  },
+  {
+    "doc_id": "doc_011",
+    "doc_type": "sop",
+    "machine_type": "ROBOT_ARM",
+    "title": "SOP-Troubleshooting-ROBOT_ARM: Responding to Elevated Vibration or Temperature",
+    "body": "SOP-Troubleshooting-ROBOT_ARM: Responding to Elevated Vibration/Temperature Alerts on Robotic Arms\n\n1. Confirm the alert against the live sensor dashboard \u2014 check whether the trend is\n   isolated to one reading (likely a sensor glitch) or sustained over multiple days\n   (likely a real mechanical issue).\n2. Cross-reference days-since-last-maintenance. A machine well past its maintenance\n   window showing a sustained trend is higher priority than one recently serviced.\n3. The dominant failure mode for Robotic Arms is joint actuator wear. Inspect the corresponding\n   component first before broader diagnostics.\n4. If the trend matches the pre-failure pattern described in the equipment manual\n   (rising vibration, increasing temperature variability), schedule inspection within\n   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.\n5. Log findings in the maintenance log regardless of outcome, including cases where\n   inspection found no issue \u2014 this data improves future predictions."
+  },
+  {
+    "doc_id": "doc_012",
+    "doc_type": "sop",
+    "machine_type": "PUMP",
+    "title": "SOP-Troubleshooting-PUMP: Responding to Elevated Vibration or Temperature",
+    "body": "SOP-Troubleshooting-PUMP: Responding to Elevated Vibration/Temperature Alerts on Industrial Pumps\n\n1. Confirm the alert against the live sensor dashboard \u2014 check whether the trend is\n   isolated to one reading (likely a sensor glitch) or sustained over multiple days\n   (likely a real mechanical issue).\n2. Cross-reference days-since-last-maintenance. A machine well past its maintenance\n   window showing a sustained trend is higher priority than one recently serviced.\n3. The dominant failure mode for Industrial Pumps is impeller cavitation and bearing wear. Inspect the corresponding\n   component first before broader diagnostics.\n4. If the trend matches the pre-failure pattern described in the equipment manual\n   (rising vibration, increasing temperature variability), schedule inspection within\n   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.\n5. Log findings in the maintenance log regardless of outcome, including cases where\n   inspection found no issue \u2014 this data improves future predictions."
+  },
+  {
+    "doc_id": "doc_013",
+    "doc_type": "maintenance_log",
+    "machine_type": "CNC_MILL",
+    "title": "Spindle bearing replaced after 3-week vibration climb",
+    "body": "Machine flagged for rising vibration trend starting approx. 3 weeks prior. Inspection found spindle bearing wear consistent with the manual's described failure pattern. Bearing replaced, vibration returned to baseline (2.1 mm/s) within 24 hours of restart."
+  },
+  {
+    "doc_id": "doc_014",
+    "doc_type": "maintenance_log",
+    "machine_type": "CNC_MILL",
+    "title": "False alarm \u2014 sensor recalibration, no mechanical issue found",
+    "body": "Vibration sensor showed an isolated spike on a single reading with no sustained trend before or after. Inspection found no mechanical issue. Sensor was recalibrated as a precaution. Logging as false alarm per SOP-002 guidance to record no-issue-found inspections."
+  },
+  {
+    "doc_id": "doc_015",
+    "doc_type": "maintenance_log",
+    "machine_type": "CONVEYOR",
+    "title": "Drive belt misalignment corrected during scheduled maintenance",
+    "body": "Routine 40-day maintenance check found early-stage belt misalignment, not yet reflected in a strong sensor trend. Belt realigned and tensioned. Flagged as a good example of catching an issue before it produced a measurable sensor drift."
+  },
+  {
+    "doc_id": "doc_016",
+    "doc_type": "maintenance_log",
+    "machine_type": "CONVEYOR",
+    "title": "Belt failure after delayed maintenance window",
+    "body": "Machine was 52 days since last maintenance (12 days past the standard window) when vibration trend crossed the elevated-risk threshold. Inspection found advanced belt wear; belt failed completely two days after the alert during attempted continued operation. Replaced belt and drive pulley. Recommend stricter enforcement of the 40-day maintenance window going forward."
+  },
+  {
+    "doc_id": "doc_017",
+    "doc_type": "maintenance_log",
+    "machine_type": "PRESS",
+    "title": "Hydraulic seal replaced following gradual temperature rise",
+    "body": "Temperature trend showed the characteristic rolling-average rise over approximately 3 weeks with increasing day-to-day variability. Hydraulic seal inspection confirmed degradation. Seal replaced, temperature volatility dropped back to typical range within one day."
+  },
+  {
+    "doc_id": "doc_018",
+    "doc_type": "maintenance_log",
+    "machine_type": "PRESS",
+    "title": "Unexplained vibration spike, root cause not confirmed",
+    "body": "Single-day vibration spike with no clear trend before or after. Inspection did not conclusively identify a cause; loose mounting bolt was tightened as a precaution. Recommend monitoring for recurrence before ruling out a developing seal issue."
+  },
+  {
+    "doc_id": "doc_019",
+    "doc_type": "maintenance_log",
+    "machine_type": "ROBOT_ARM",
+    "title": "Joint actuator wear identified and replaced",
+    "body": "Sustained vibration increase over 2.5 weeks matched the documented joint actuator wear pattern for this machine class. Actuator on joint 3 replaced. Post-replacement vibration returned to baseline."
+  },
+  {
+    "doc_id": "doc_020",
+    "doc_type": "maintenance_log",
+    "machine_type": "ROBOT_ARM",
+    "title": "No issue found on flagged machine, continued monitoring recommended",
+    "body": "Machine flagged for a mild vibration trend that had not yet crossed the sustained-drift threshold described in the manual. Inspection found components within tolerance. No action taken; flagged for closer monitoring on next cycle rather than immediate part replacement."
+  },
+  {
+    "doc_id": "doc_021",
+    "doc_type": "maintenance_log",
+    "machine_type": "PUMP",
+    "title": "Impeller cavitation causing early bearing wear",
+    "body": "Rising vibration combined with elevated temperature variability over 3 weeks. Inspection found impeller cavitation damage, which had begun accelerating bearing wear. Impeller and bearing both replaced in the same maintenance window to avoid a second shutdown."
+  },
+  {
+    "doc_id": "doc_022",
+    "doc_type": "maintenance_log",
+    "machine_type": "PUMP",
+    "title": "Routine maintenance, no anomalies",
+    "body": "Standard 35-day maintenance check. Sensor trends nominal throughout the prior interval. No component wear beyond expected levels. No action needed beyond standard lubrication per manual."
+  },
+  {
+    "doc_id": "doc_023",
+    "doc_type": "maintenance_log",
+    "machine_type": "CNC_MILL",
+    "title": "Delayed maintenance nearly caused unplanned downtime",
+    "body": "Machine had gone 48 days since last maintenance (past the 45-day upper bound in SOP-002) when a strong vibration trend was flagged. Inspection found advanced spindle bearing wear, close to the failure threshold described in the manual. Bearing replaced just ahead of what likely would have been an unplanned failure."
+  },
+  {
+    "doc_id": "doc_024",
+    "doc_type": "maintenance_log",
+    "machine_type": "CONVEYOR",
+    "title": "Sensor malfunction produced false rising-temperature trend",
+    "body": "Apparent temperature drift over several days was traced to a faulty temperature sensor reading progressively higher due to a loose connection, not an actual mechanical issue. Connection repaired, sensor recalibrated. Important reminder that not every sensor trend reflects a real mechanical trend \u2014 cross-check vibration alongside temperature before concluding a real issue is developing."
+  }
+]

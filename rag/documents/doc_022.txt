@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: PUMP]
+Title: Routine maintenance, no anomalies
+
+Standard 35-day maintenance check. Sensor trends nominal throughout the prior interval. No component wear beyond expected levels. No action needed beyond standard lubrication per manual.

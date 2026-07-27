@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: PRESS]
+Title: Hydraulic seal replaced following gradual temperature rise
+
+Temperature trend showed the characteristic rolling-average rise over approximately 3 weeks with increasing day-to-day variability. Hydraulic seal inspection confirmed degradation. Seal replaced, temperature volatility dropped back to typical range within one day.

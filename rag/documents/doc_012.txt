@@ -1,0 +1,17 @@
+[doc_type: sop] [machine_type: PUMP]
+Title: SOP-Troubleshooting-PUMP: Responding to Elevated Vibration or Temperature
+
+SOP-Troubleshooting-PUMP: Responding to Elevated Vibration/Temperature Alerts on Industrial Pumps
+
+1. Confirm the alert against the live sensor dashboard — check whether the trend is
+   isolated to one reading (likely a sensor glitch) or sustained over multiple days
+   (likely a real mechanical issue).
+2. Cross-reference days-since-last-maintenance. A machine well past its maintenance
+   window showing a sustained trend is higher priority than one recently serviced.
+3. The dominant failure mode for Industrial Pumps is impeller cavitation and bearing wear. Inspect the corresponding
+   component first before broader diagnostics.
+4. If the trend matches the pre-failure pattern described in the equipment manual
+   (rising vibration, increasing temperature variability), schedule inspection within
+   7 days per SOP-002, and follow SOP-001 (LOTO) before any hands-on inspection.
+5. Log findings in the maintenance log regardless of outcome, including cases where
+   inspection found no issue — this data improves future predictions.

@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: PRESS]
+Title: Unexplained vibration spike, root cause not confirmed
+
+Single-day vibration spike with no clear trend before or after. Inspection did not conclusively identify a cause; loose mounting bolt was tightened as a precaution. Recommend monitoring for recurrence before ruling out a developing seal issue.

@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: PUMP]
+Title: Impeller cavitation causing early bearing wear
+
+Rising vibration combined with elevated temperature variability over 3 weeks. Inspection found impeller cavitation damage, which had begun accelerating bearing wear. Impeller and bearing both replaced in the same maintenance window to avoid a second shutdown.

@@ -162,8 +162,55 @@ Interestingly, the raw point-in-time `temperature_c` and `vibration_mm_s` readin
 rate-of-change features contribute very little — confirming the original hypothesis that trend
 features (rolling stats) carry the real signal, not instantaneous values.
 
-### Phase 2 — Unstructured data + RAG
-*Not started yet.*
+### Phase 2 — Unstructured data + RAG ✅
+
+**Documents (`rag/generate_documents.py`):** 24 synthetic documents — 5 equipment manuals (one
+per machine type), 7 SOPs (2 general: lockout/tagout and maintenance scheduling; 5 per-machine-type
+troubleshooting SOPs), and 12 maintenance log entries. The maintenance logs are deliberately mixed:
+some describe a real failure that matched the documented pre-failure pattern, some describe false
+alarms or "no issue found" inspections, and one describes a sensor malfunction that mimicked a
+real trend. This matters for RAG realism — a retrieval system that only ever sees confirmed-failure
+logs will bias the LLM layer toward always concluding "this is a real failure," which isn't how
+real maintenance data looks.
+
+**Chunking strategy (`rag/build_index.py`):** At this corpus's scale, each document is short (a
+manual section, an SOP, or a single log entry — typically 100-250 words), so the chunking unit is
+**one document = one chunk** for anything under 1,200 characters, rather than splitting into
+smaller fixed-size pieces. Splitting a short document further would risk cutting a single warning
+sign or procedure step across chunk boundaries, which actively hurts retrieval rather than helping
+it — there's no benefit to sub-document chunking when the whole document is already
+retrieval-sized. A character-based overlapping splitter (150-char overlap) is included for
+anything that exceeds the threshold, and it's genuinely exercised: 5 of the 24 documents (the
+equipment manuals, which run slightly longer) came in just over 1,200 characters and were split
+into 2 chunks each, giving 29 total chunks from 24 documents.
+
+**What would change at larger scale:** this one-document-one-chunk approach does not scale to
+real multi-page manuals. At that scale I'd move to either fixed-size overlapping chunks (e.g.
+500 tokens with 50-token overlap) or section-aware splitting on the manual's own headers, so a
+100-page manual doesn't get embedded as a single unsearchable blob or, at the other extreme,
+shredded into fragments that lose surrounding context.
+
+**Embeddings + vector store:** chunks are embedded with `all-MiniLM-L6-v2`
+(sentence-transformers, 384-dim) — a small, fast, well-understood model that doesn't require
+digging into transformer internals to reason about, appropriate for a 24-document corpus — and
+loaded into a persistent ChromaDB collection (`rag/chroma_db/`) with metadata (`doc_type`,
+`machine_type`, `title`) attached to every chunk so retrieval can be filtered (e.g. "only PUMP
+docs plus GENERAL SOPs") rather than searching the whole corpus indiscriminately.
+
+**Retrieval (`rag/retrieve.py`):** a `retrieve(query, k, machine_type)` function that the Phase 3
+orchestration layer will call directly — it embeds the query, optionally filters to a specific
+machine type (plus `GENERAL` docs, which apply across all types), and returns the top-k chunks
+with their distance scores.
+
+**Retrieval sanity check:** this sandbox environment's network can't reach huggingface.co to
+download the actual embedding model, so I validated the chunking → storage → retrieval pipeline
+end to end with a TF-IDF stand-in embedding (`rag/_sandbox_test_retrieval.py`, not part of the
+shipped pipeline) instead. Results were sensible: a query about "vibration climbing on a CNC mill"
+correctly surfaced the CNC manual, the CNC troubleshooting SOP, and the CNC maintenance log
+(in that order); a "pump bearing" query surfaced pump-specific docs; a general maintenance-timing
+query surfaced the GENERAL scheduling SOP. `build_index.py` and `retrieve.py` themselves are
+unchanged and use the real `all-MiniLM-L6-v2` model — they'll run correctly the moment you run
+them with normal internet access locally.
 
 ### Phase 3 — LangChain orchestration
 *Not started yet.*

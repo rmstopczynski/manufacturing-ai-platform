@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: ROBOT_ARM]
+Title: Joint actuator wear identified and replaced
+
+Sustained vibration increase over 2.5 weeks matched the documented joint actuator wear pattern for this machine class. Actuator on joint 3 replaced. Post-replacement vibration returned to baseline.

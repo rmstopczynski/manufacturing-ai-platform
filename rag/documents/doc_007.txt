@@ -1,0 +1,15 @@
+[doc_type: sop] [machine_type: GENERAL]
+Title: SOP-002: Routine Maintenance Scheduling
+
+SOP-002: Routine Maintenance Scheduling
+
+Standard maintenance intervals are set at 30-45 days for most rotating and hydraulic
+equipment, tracked via days-since-last-maintenance. Equipment approaching or exceeding
+40 days since last maintenance should be prioritized for the next scheduled window,
+even if sensor readings currently look nominal — maintenance intervals are a
+preventive measure, not a reactive one.
+
+When a machine is flagged by the predictive maintenance system as elevated-risk,
+its maintenance should be moved up regardless of where it falls in the normal
+rotation, and the technician should be given the specific sensor trend that
+triggered the flag (not just "elevated risk") so they know what to inspect first.

@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CNC_MILL]
+Title: Spindle bearing replaced after 3-week vibration climb
+
+Machine flagged for rising vibration trend starting approx. 3 weeks prior. Inspection found spindle bearing wear consistent with the manual's described failure pattern. Bearing replaced, vibration returned to baseline (2.1 mm/s) within 24 hours of restart.

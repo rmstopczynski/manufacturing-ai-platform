@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: ROBOT_ARM]
+Title: No issue found on flagged machine, continued monitoring recommended
+
+Machine flagged for a mild vibration trend that had not yet crossed the sustained-drift threshold described in the manual. Inspection found components within tolerance. No action taken; flagged for closer monitoring on next cycle rather than immediate part replacement.

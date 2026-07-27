@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CNC_MILL]
+Title: False alarm — sensor recalibration, no mechanical issue found
+
+Vibration sensor showed an isolated spike on a single reading with no sustained trend before or after. Inspection found no mechanical issue. Sensor was recalibrated as a precaution. Logging as false alarm per SOP-002 guidance to record no-issue-found inspections.

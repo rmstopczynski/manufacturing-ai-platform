@@ -1,0 +1,4 @@
+[doc_type: maintenance_log] [machine_type: CONVEYOR]
+Title: Sensor malfunction produced false rising-temperature trend
+
+Apparent temperature drift over several days was traced to a faulty temperature sensor reading progressively higher due to a loose connection, not an actual mechanical issue. Connection repaired, sensor recalibrated. Important reminder that not every sensor trend reflects a real mechanical trend — cross-check vibration alongside temperature before concluding a real issue is developing.

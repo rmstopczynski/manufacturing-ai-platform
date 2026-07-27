@@ -9,8 +9,8 @@ faker==26.0.0
 langchain==0.2.14
 langchain-openai==0.1.22
 langchain-community==0.2.12
-chromadb==0.5.5
-sentence-transformers==3.0.1
+chromadb==1.5.9
+sentence-transformers==5.6.1
 openai==1.42.0
 streamlit==1.37.1
 python-dotenv==1.0.1

@@ -1,0 +1,22 @@
+[doc_type: manual] [machine_type: CONVEYOR]
+Title: Conveyor System — Equipment Manual (Section 4: Operating Parameters)
+
+Conveyor System Equipment Manual
+Section 4: Operating Parameters and Warning Signs
+
+Normal operating range: operating temperature 36-44°C, vibration 0.9-1.5 mm/s. Readings outside this range for more than a few
+consecutive readings should be logged and reviewed at the next maintenance check.
+
+The most common failure mode for this equipment class is drive belt misalignment. Early indicators
+include a gradual upward trend in vibration readings over 2-4 weeks, increasing
+day-to-day variability in temperature (not just a higher average, but less
+consistency reading to reading), and audible changes in operating noise.
+
+If vibration readings show a sustained upward trend combined with rising temperature
+volatility, schedule an inspection within 7 days even if individual readings remain
+within nominal range — the trend itself is the warning sign, not any single reading.
+
+Do not wait for a hard threshold breach before inspecting. Machines in this class have
+historically failed while individual sensor readings were still inside the "normal"
+range, because the drift toward failure happens gradually enough that no single
+reading looks alarming in isolation.
