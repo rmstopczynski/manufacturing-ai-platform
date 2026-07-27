@@ -73,8 +73,9 @@ All data used (sensor logs, manuals, SOPs) is **synthetic** — no real Jabil da
 ```
 manufacturing-ai-platform/
 ├── data/           # synthetic sensor/machine log data (raw + processed)
-├── ml/             # feature engineering, model training, saved model artifacts
-├── rag/            # synthetic documents, chunking/embedding, chroma_db
+├── ml/             # feature engineering, model training, prediction, saved model artifacts
+├── rag/            # synthetic documents, chunking/embedding, chroma_db, retrieval
+├── orchestration/  # routing + LangChain chain tying ML + RAG + LLM together
 ├── api/            # FastAPI app (/predict, /ask)
 ├── app/            # Streamlit chat + dashboard
 ├── docker/         # Dockerfile(s), docker-compose
@@ -212,8 +213,65 @@ query surfaced the GENERAL scheduling SOP. `build_index.py` and `retrieve.py` th
 unchanged and use the real `all-MiniLM-L6-v2` model — they'll run correctly the moment you run
 them with normal internet access locally.
 
-### Phase 3 — LangChain orchestration
-*Not started yet.*
+### Phase 3 — LangChain orchestration ✅
+
+**Routing (`orchestration/router.py`):** given a raw question, decides (a) whether it needs an ML
+prediction — only if a specific machine ID (regex `M\d{3}`) is mentioned, since predictions are
+per-machine — and (b) what to filter retrieval to, based on machine-type keywords in the question
+(e.g. "conveyor," "pump"). **Deliberately plain Python, not a second LLM call.** With only two
+real branches (prediction needed or not; which machine type to filter to), asking an LLM "what
+should I do with this question?" would add latency and cost for a decision a regex handles in
+microseconds. This is a genuine scope-appropriate tradeoff — a more open-ended assistant with many
+tools would justify LLM-based routing or a proper agent framework; this doesn't, and claiming
+otherwise would be overselling the project.
+
+**A real gap found and fixed during testing:** the first version only inferred machine *type* from
+keywords in the question text (e.g. "conveyor"), so a question like "Is M001 at risk?" — which
+names a specific machine but never says what kind of machine it is — fell back to searching the
+*entire* document corpus instead of filtering to CNC-mill-specific docs. Fixed by having
+`ml/predictor.py` resolve and return the machine's type (derived from the one-hot `type_*`
+feature columns) alongside its prediction, so the orchestration layer can fall back to that when
+the question itself gives no type keyword. Caught this by actually running test cases through the
+pipeline, not by reasoning about the code in the abstract — a good example of why Phase 5
+(evaluation harness) matters.
+
+**ML prediction (`ml/predictor.py`):** loads the persisted XGBoost model and the most recent
+feature row for the requested machine ID, returning a structured result (probability, days since
+maintenance, top 3 contributing features by importance) or a clean "machine not found" error
+rather than crashing — this is what lets the LLM say "I don't have data for that machine ID"
+instead of guessing.
+
+**Prompt construction (`orchestration/chain.py`):** a system prompt instructs the model to answer
+*only* from the provided ML prediction + retrieved documents, not to speculate about a machine's
+health without a prediction, and to say plainly when nothing relevant was retrieved rather than
+falling back to general knowledge. Retrieved chunks above a distance threshold are filtered out
+before ever reaching the prompt — instead of always injecting the top-k regardless of relevance,
+which is what would let the model quietly answer from documents that don't actually address the
+question. The LLM call itself is a small LCEL chain
+(`ChatPromptTemplate | ChatOpenAI | StrOutputParser`) — LangChain's actual job here is templating
+and swappability (decoupling the prompt/model from the call site so a different model or added
+structured-output parsing later doesn't require touching the calling code), not magic; for a
+single-model, single-prompt project like this, a raw OpenAI call would work almost as well, and
+that's the honest answer if pushed on "why LangChain" in an interview rather than overselling it.
+
+**Edge cases handled (and tested):**
+- **Vague input** (e.g. a single nonsense word): short-circuits before the LLM is ever called,
+  judged by word count rather than character count, since a short garbage string and a short real
+  string aren't distinguishable by length alone.
+- **Unknown machine ID:** `predict_machine` returns a structured "not found" result; the prompt
+  tells the LLM this explicitly so it says so instead of inventing a plausible-sounding answer.
+- **No relevant documents retrieved** (e.g. an off-topic question): the retrieval context passed
+  to the LLM explicitly states nothing relevant was found, rather than passing the top-k anyway
+  and hoping the model notices they're irrelevant.
+
+**Testing note (sandbox limitation):** this sandbox can't reach `api.openai.com` or
+`huggingface.co`, so end-to-end testing here used LangChain's `FakeListChatModel` in place of
+`ChatOpenAI` (`orchestration/_sandbox_test_chain.py`, not part of the shipped pipeline) to verify
+routing, prediction-fetching, retrieval, and prompt construction all wire together correctly — the
+exact formatted prompt sent to the model was inspected directly to confirm it's correct, not just
+that the code runs without errors. `orchestration/chain.py` and `ml/predictor.py` are otherwise
+unchanged production code and will call the real OpenAI API correctly once run locally with
+`OPENAI_API_KEY` set.
 
 ### Phase 4 — API + front end
 *Not started yet.*

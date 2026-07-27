@@ -9,12 +9,28 @@ from chromadb.utils import embedding_functions
 CHROMA_DIR = "rag/chroma_db"
 COLLECTION_NAME = "manufacturing_docs"
 
-_embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-_client = chromadb.PersistentClient(path=CHROMA_DIR)
+_embed_fn = None
+_client = None
+
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = chromadb.PersistentClient(path=CHROMA_DIR)
+    return _client
+
+
+def _get_embed_fn():
+    global _embed_fn
+    if _embed_fn is None:
+        _embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
+    return _embed_fn
 
 
 def get_collection():
-    return _client.get_collection(name=COLLECTION_NAME, embedding_function=_embed_fn)
+    return _get_client().get_collection(name=COLLECTION_NAME, embedding_function=_get_embed_fn())
 
 
 def retrieve(query: str, k: int = 3, machine_type: str | None = None) -> list[dict]:
