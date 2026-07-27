@@ -191,12 +191,26 @@ real multi-page manuals. At that scale I'd move to either fixed-size overlapping
 100-page manual doesn't get embedded as a single unsearchable blob or, at the other extreme,
 shredded into fragments that lose surrounding context.
 
-**Embeddings + vector store:** chunks are embedded with `all-MiniLM-L6-v2`
-(sentence-transformers, 384-dim) — a small, fast, well-understood model that doesn't require
-digging into transformer internals to reason about, appropriate for a 24-document corpus — and
-loaded into a persistent ChromaDB collection (`rag/chroma_db/`) with metadata (`doc_type`,
-`machine_type`, `title`) attached to every chunk so retrieval can be filtered (e.g. "only PUMP
-docs plus GENERAL SOPs") rather than searching the whole corpus indiscriminately.
+**Embeddings + vector store:** chunks are embedded using ChromaDB's built-in
+`ONNXMiniLM_L6_V2` embedding function (`onnxruntime` + `tokenizers`, both already
+dependencies of `chromadb` itself — no extra packages needed) and loaded into a persistent
+ChromaDB collection (`rag/chroma_db/`) with metadata (`doc_type`, `machine_type`, `title`)
+attached to every chunk so retrieval can be filtered (e.g. "only PUMP docs plus GENERAL SOPs")
+rather than searching the whole corpus indiscriminately.
+
+**Post-launch change: dropped PyTorch entirely.** The first version used
+sentence-transformers' `all-MiniLM-L6-v2` via `SentenceTransformerEmbeddingFunction`, which
+pulls in PyTorch as a dependency. Switched to Chroma's built-in `ONNXMiniLM_L6_V2` instead —
+the same MiniLM model, exported to ONNX and run through `onnxruntime` rather than PyTorch.
+Two real reasons, not just "it broke once": (1) it removes a genuinely heavy dependency
+(PyTorch plus its GPU/CUDA extras — multiple GB depending on platform) for a task that was
+never using a GPU anyway, and (2) it sidesteps a real deployment problem — PyTorch's DLL
+loading on Windows has a well-known failure mode (`WinError 1114`, tied to missing/mismatched
+VC++ runtime versions) that has nothing to do with this project's code but is a genuinely bad
+first-run experience for anyone trying to get this running locally on Windows. This came up
+while setting up the project locally, and switching the embedding backend was a better fix
+than chasing a Windows system-DLL issue — a good example of picking the dependency that
+matches what the task actually needs rather than defaulting to the most familiar one.
 
 **Retrieval (`rag/retrieve.py`):** a `retrieve(query, k, machine_type)` function that the Phase 3
 orchestration layer will call directly — it embeds the query, optionally filters to a specific
@@ -264,17 +278,98 @@ that's the honest answer if pushed on "why LangChain" in an interview rather tha
   to the LLM explicitly states nothing relevant was found, rather than passing the top-k anyway
   and hoping the model notices they're irrelevant.
 
-**Testing note (sandbox limitation):** this sandbox can't reach `api.openai.com` or
+**Post-launch change: made the LLM provider configurable, switched default to Groq.** The chain
+originally hardcoded `ChatOpenAI`. Since OpenAI usage costs money per call, the first swap was to
+xAI's Grok — but the API key on hand turned out to be a **Groq** key (`gsk_...`), not an **xAI**
+key (`xai-...`); Groq and xAI/Grok are unrelated companies with confusingly similar names (Groq
+makes fast inference hardware and hosts open models; xAI makes the Grok model itself). Once that
+mixup was caught from the actual API error message, added `langchain-groq` as a third provider and
+made it the default. `orchestration/chain.py` now picks the provider from an `LLM_PROVIDER` env
+var (`groq`, `xai`, or `openai`) and instantiates the matching LangChain chat model — everything
+else (routing, prediction, retrieval, prompt template, output parsing) is untouched, because none
+of it was ever provider-specific to begin with. This is the actual payoff of the "why LangChain"
+design decision from earlier in this section, demonstrated three times over rather than just
+claimed: each provider swap touched exactly one function (`_build_llm`), not the calling code.
+Also worth noting: Groq deprecates model names over time (an initial choice,
+`llama-3.3-70b-versatile`, turned out to already be deprecated) — the default is
+`openai/gpt-oss-20b` (Groq's current recommendation as of this writing), overridable via
+`GROQ_MODEL` if Groq's lineup changes again. Re-ran the full sandbox chain test after each change
+to confirm nothing else broke.
+
+**Post-launch bugfix: `.env` was never actually loaded.** `python-dotenv` was in `requirements.txt`
+and `.env.example` documented the right variables, but nothing in the code ever called
+`load_dotenv()` — so copying `.env.example` to `.env` and filling in a real API key did nothing;
+`os.getenv("XAI_API_KEY")` still returned `None` at runtime, surfacing as a Pydantic validation
+error from `ChatXAI` ("xAI API key is not set"). Fixed by calling `load_dotenv()` at the top of
+`orchestration/chain.py` (not `api/main.py`) specifically so both the FastAPI app *and*
+`python -m orchestration.chain` run standalone pick up `.env` correctly — the API imports the
+chain module, so the load happens automatically either way. A real example of "the file existing
+and being documented doesn't mean the wiring is correct," caught by an actual runtime error
+while running this locally, not by re-reading the code.
+
+**Testing note (sandbox limitation):** this sandbox can't reach `api.openai.com`, `api.x.ai`, or
 `huggingface.co`, so end-to-end testing here used LangChain's `FakeListChatModel` in place of
-`ChatOpenAI` (`orchestration/_sandbox_test_chain.py`, not part of the shipped pipeline) to verify
+`ChatXAI`/`ChatOpenAI` (`orchestration/_sandbox_test_chain.py`, not part of the shipped pipeline) to verify
 routing, prediction-fetching, retrieval, and prompt construction all wire together correctly — the
 exact formatted prompt sent to the model was inspected directly to confirm it's correct, not just
 that the code runs without errors. `orchestration/chain.py` and `ml/predictor.py` are otherwise
-unchanged production code and will call the real OpenAI API correctly once run locally with
-`OPENAI_API_KEY` set.
+unchanged production code and will call the real LLM API correctly once run locally with the
+appropriate API key set in `.env`.
 
-### Phase 4 — API + front end
-*Not started yet.*
+### Phase 4 — API + front end ✅
+
+**FastAPI backend (`api/main.py`):** two endpoints — `POST /predict?machine_id=` for the ML-only
+path, and `POST /ask` for the full RAG + LLM assistant — plus `GET /health`. Routes/request
+models/dependency injection map conceptually onto ASP.NET Core MVC controllers, which was the
+fastest way to get real depth in a new framework rather than learning FastAPI's conventions from
+zero.
+
+- **Dependency injection, done properly:** the LLM-backed assistant is constructed via a cached
+  `Depends(get_assistant)` rather than instantiated inline, for two real reasons — the server can
+  start and serve `/predict` without needing `OPENAI_API_KEY` set at all (only `/ask` needs it,
+  and only lazily on first use), and it makes the assistant swappable in tests via FastAPI's
+  `dependency_overrides`, which is exactly how it was tested here (see below).
+- **Error handling:** unknown machine IDs return `404` with a clear message rather than a generic
+  error; empty/whitespace `machine_id` returns `422`; `/ask` validates the question isn't empty via
+  Pydantic (`min_length=1`) and wraps assistant failures (e.g. an LLM call failing) as `502`, so API
+  consumers can distinguish "this service has a bug" from "an upstream call failed."
+
+**Streamlit front end (`app/streamlit_app.py`):** a chat interface calling `/ask`, with an
+expandable "what was used to generate this answer" panel showing the routing decision, ML
+prediction, and retrieved chunks per response — so it's not a black box. A sidebar dashboard calls
+`/predict` for every known machine and highlights at-risk ones. The UI talks to the backend over
+HTTP rather than importing the orchestration code directly, matching how this would actually be
+deployed as separate services/containers.
+
+**Live-tested, not just compiled:** unlike the OpenAI-dependent pieces in Phases 2-3, FastAPI and
+Streamlit don't need external network access to run, so both were actually started and hit with
+real requests in this environment (not simulated):
+- `uvicorn api.main:app` started successfully; `GET /health` → `200`; `POST /predict?machine_id=M001`
+  → `200` with the full prediction; `POST /predict?machine_id=M999` → `404` with a clear error.
+- `streamlit run app/streamlit_app.py` started successfully and served `200 OK` with no runtime
+  errors in the logs.
+- `/ask` was tested via FastAPI's `TestClient` with the assistant dependency overridden to a
+  fake-LLM-backed instance (`api/_sandbox_test_api.py`, sandbox-only — same reasoning as the Phase
+  3 test) — routing, the empty-question `422` validation, and the full response shape all verified
+  correct end to end. This is the intended real use of `dependency_overrides`, not a workaround
+  specific to this sandbox.
+
+**Post-launch fix: parallelized dashboard prediction fetches.** The sidebar dashboard originally
+called `/predict` for every known machine sequentially in a loop. With 60 machines this meant the
+whole page — including the chat interface itself — waited on N round-trip requests before
+rendering anything, so a slow or momentarily-unreachable backend produced a long blank screen
+rather than a visible error. Fixed two ways: (1) a single upfront `/health` check fails fast with
+a clear message if the API isn't reachable at all, instead of hitting N slow timeouts one at a
+time, and (2) the per-machine `/predict` calls now run concurrently via a small
+`ThreadPoolExecutor` rather than sequentially, so the wall-clock cost is roughly one request's
+worth of latency rather than sixty. Re-tested live in this environment after the fix — both
+`uvicorn` and `streamlit` started cleanly and the dashboard rendered without delay.
+```bash
+# terminal 1
+uvicorn api.main:app --reload --port 8000
+# terminal 2
+streamlit run app/streamlit_app.py
+```
 
 ### Phase 5 — Evaluation harness
 *Not started yet.*

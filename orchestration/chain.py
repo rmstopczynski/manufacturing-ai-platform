@@ -24,13 +24,20 @@ interview rather than overselling LangChain as doing something it isn't here.
 """
 
 import os
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from orchestration.router import route_question
 from ml.predictor import predict_machine
 from rag.retrieve import retrieve
+
+# Loads variables from a local .env file (XAI_API_KEY, OPENAI_API_KEY, LLM_PROVIDER,
+# etc.) into the process environment. Without this, python-dotenv being in
+# requirements.txt and a .env file existing on disk does nothing on their own —
+# something has to actually call load_dotenv(). This is that call, and it lives here
+# (not just in api/main.py) so `python -m orchestration.chain` also works standalone.
+load_dotenv()
 
 # Retrieved chunks with a distance above this are treated as "not actually relevant"
 # rather than being stuffed into the prompt anyway. Chroma's default distance metric
@@ -85,14 +92,46 @@ def _format_retrieval_context(chunks: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
-def build_chain(llm=None):
-    """Builds the LCEL chain: prompt -> llm -> string output. `llm` is injectable so
-    tests can pass a fake/stub model without hitting the real OpenAI API."""
-    if llm is None:
-        llm = ChatOpenAI(
+def _build_llm():
+    """Instantiates the chat model based on LLM_PROVIDER (default: groq). This is the
+    one place a model swap touches — everything else (routing, prediction, retrieval,
+    prompt template, output parsing) is provider-agnostic by construction, which is
+    the actual payoff of the "why LangChain" design decision described above, not
+    just a claim on paper."""
+    provider = os.getenv("LLM_PROVIDER", "groq").lower()
+
+    if provider == "groq":
+        from langchain_groq import ChatGroq
+        # llama-3.3-70b-versatile (an earlier obvious choice) has been deprecated by
+        # Groq — openai/gpt-oss-20b is their current recommended general-purpose
+        # model, fast and available on Groq's free tier. Override via GROQ_MODEL if
+        # Groq's lineup changes again; check console.groq.com/docs/models for the
+        # current list before assuming this name still works.
+        return ChatGroq(
+            model=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"),
+            temperature=0.2,
+        )
+    elif provider == "xai":
+        from langchain_xai import ChatXAI
+        return ChatXAI(
+            model=os.getenv("XAI_MODEL", "grok-4-fast"),
+            temperature=0.2,
+        )
+    elif provider == "openai":
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             temperature=0.2,
         )
+    else:
+        raise ValueError(f"Unknown LLM_PROVIDER '{provider}' — expected 'groq', 'xai', or 'openai'.")
+
+
+def build_chain(llm=None):
+    """Builds the LCEL chain: prompt -> llm -> string output. `llm` is injectable so
+    tests can pass a fake/stub model without hitting a real API."""
+    if llm is None:
+        llm = _build_llm()
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("user", USER_PROMPT_TEMPLATE),
@@ -153,8 +192,8 @@ class ManufacturingAssistant:
 
 
 if __name__ == "__main__":
-    # Requires OPENAI_API_KEY to be set — see .env.example. Not runnable in the
-    # sandbox used to build this (see README Phase 3 notes); run locally.
+    # Requires XAI_API_KEY (default provider) or OPENAI_API_KEY set — see .env.example.
+    # Not runnable in the sandbox used to build this (see README Phase 3 notes); run locally.
     assistant = ManufacturingAssistant()
     result = assistant.answer("Is machine M014 at risk of failing soon?")
     print(result["answer"])

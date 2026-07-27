@@ -19,8 +19,17 @@ note on what changes at larger document scale (fixed-size overlapping chunks, or
 section-aware splitting on manual headers, become necessary once documents exceed a
 page or two).
 
-Output: a persistent Chroma collection at rag/chroma_db/, plus a retrieval function
-importable by the LangChain orchestration layer (Phase 3).
+Embedding model note (updated after initial build): originally used
+sentence-transformers' `all-MiniLM-L6-v2` via SentenceTransformerEmbeddingFunction, which
+pulls in PyTorch as a dependency. Switched to Chroma's built-in ONNXMiniLM_L6_V2 embedding
+function instead — it's the same underlying MiniLM model exported to ONNX, run through
+onnxruntime rather than PyTorch. Two reasons: it removes a genuinely heavy dependency
+(PyTorch + its GPU/CUDA extras, several hundred MB to a few GB depending on platform) for a
+task that doesn't need it, and it sidesteps a real-world deployment problem — PyTorch's DLL
+loading on Windows has a well-known failure mode (WinError 1114, missing/mismatched VC++
+runtime) that has nothing to do with this project's code and is a genuinely bad experience for
+anyone trying to run this locally on Windows. ONNX Runtime doesn't have this problem. This is a
+legitimate infra/deployment tradeoff worth being able to explain, not just a bugfix footnote.
 """
 
 import json
@@ -86,11 +95,9 @@ def build_index():
     print(f"{len(documents)} documents -> {len(all_chunks)} chunks "
           f"(all single-chunk: {len(all_chunks) == len(documents)})")
 
-    # sentence-transformers/all-MiniLM-L6-v2: 384-dim, fast, well-understood baseline
-    # for semantic similarity — no need for a larger model at this corpus size (24 docs).
-    embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-        model_name="all-MiniLM-L6-v2"
-    )
+    # ONNXMiniLM_L6_V2: the same MiniLM model as sentence-transformers' all-MiniLM-L6-v2,
+    # run through onnxruntime instead of PyTorch — see module docstring for why.
+    embed_fn = embedding_functions.ONNXMiniLM_L6_V2()
 
     client = chromadb.PersistentClient(path=CHROMA_DIR)
     # Fresh collection each run, so re-running this script after editing documents

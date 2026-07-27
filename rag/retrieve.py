@@ -23,9 +23,9 @@ def _get_client():
 def _get_embed_fn():
     global _embed_fn
     if _embed_fn is None:
-        _embed_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
-        )
+        # Must match the embedding function used in build_index.py exactly, or
+        # query vectors and stored vectors won't be comparable.
+        _embed_fn = embedding_functions.ONNXMiniLM_L6_V2()
     return _embed_fn
 
 
