@@ -105,8 +105,62 @@ cp .env.example .env   # then add your OpenAI API key
   retrained periodically; the vector store is rebuilt whenever documents change) and I want the
   README/code structure to make that distinction obvious to a reader.
 
-### Phase 1 — Structured data + predictive model
-*Not started yet.*
+### Phase 1 — Structured data + predictive model ✅
+
+**Data generation (`data/generate_sensor_data.py`):** Simulated 60 machines across 5 types
+(CNC mill, conveyor, press, robot arm, pump) over 180 days of daily readings. ~35% of machines
+are assigned a failure event; those machines get a 30-day pre-failure "drift" — rising
+temperature and vibration that ramps up to the failure day — while healthy machines fluctuate
+around a stable per-type baseline. This produced 9,880 rows with a **1.06% positive rate**
+(`failed_within_7d = 1`), which is deliberately imbalanced to mirror what real predictive
+maintenance data looks like (failures are rare events, not 50/50).
+
+**Feature engineering (`ml/feature_engineering.py`):** Point-in-time sensor readings are a weak
+signal on their own — what actually indicates an approaching failure is a machine drifting away
+from *its own* recent baseline. So each row gets: 7-day rolling mean/std of temperature and
+vibration, and a 7-day rate-of-change (today vs. 7 days ago), on top of the raw readings,
+`runtime_hours`, `days_since_maintenance`, and one-hot encoded `machine_type`.
+
+**Modeling (`ml/train_model.py`):** Two models trained side by side on purpose — Logistic
+Regression as an interpretable baseline, and XGBoost as the model the project is built around —
+so "why XGBoost over something simpler" has a real number behind it instead of a talking point.
+
+- **Split:** time-based (train on the first ~80% of calendar days, test on the last ~20%), not a
+  random split. A random split would leak information — nearby days for the same machine share a
+  rolling window, so random shuffling lets the model "peek" at data adjacent to its test rows.
+- **Metric:** precision/recall/F1, not accuracy. With a 1% positive rate, a model that always
+  predicts "healthy" scores ~99% accuracy while being useless.
+- **Imbalance handling:** `class_weight="balanced"` for logistic regression;
+  `scale_pos_weight = negatives/positives` for XGBoost — both compensate for the rare positive
+  class without synthetically oversampling rows.
+
+**Actual results on the held-out test set (41 real failure-labeled rows):**
+
+| Model | Precision | Recall | F1 |
+|---|---|---|---|
+| Logistic Regression (baseline) | 0.532 | **1.000** | **0.695** |
+| XGBoost | 0.530 | 0.854 | 0.654 |
+
+**Honest design-decision note:** On this dataset, logistic regression actually edges out XGBoost
+on F1 — it caught every single failure in the test set (perfect recall), at a similar precision
+to XGBoost. This is a genuinely useful thing to be able to explain rather than a problem to hide:
+with only 64 positive examples in the training set, a simpler, heavily-regularized linear model
+generalizes at least as well as a more flexible gradient-boosted tree ensemble, which has more
+capacity to overfit sparse minority-class signal. The tradeoff XGBoost usually offers — capturing
+non-linear interactions and threshold effects in sensor readings — needs more positive examples
+to pay off than this synthetic dataset happens to contain. XGBoost is still the one persisted for
+the API (`ml/models/xgb_predictive_maintenance.joblib`), both because it's the one the rest of
+the pipeline is built to showcase and because feature importances give a cleaner story for the
+LLM layer to reason over — but the honest comparison is the more valuable interview answer than
+a cherry-picked "XGBoost wins" result would have been.
+
+**Feature importance (XGBoost):** `temp_roll7_std` (rolling temperature volatility) dominates at
+37% importance — machines that are about to fail don't just run hotter, their temperature
+becomes *less stable* day to day, which the rolling std captures directly. Machine type
+(especially CNC mills and conveyors) and rolling vibration mean are the next largest contributors.
+Interestingly, the raw point-in-time `temperature_c` and `vibration_mm_s` readings and the
+rate-of-change features contribute very little — confirming the original hypothesis that trend
+features (rolling stats) carry the real signal, not instantaneous values.
 
 ### Phase 2 — Unstructured data + RAG
 *Not started yet.*
