@@ -9,6 +9,7 @@ ml/models/*.pkl
 ml/models/*.joblib
 rag/chroma_db/*
 !rag/chroma_db/.gitkeep
+eval/results.json
 
 # OS/editor
 .DS_Store

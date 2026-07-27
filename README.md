@@ -76,6 +76,7 @@ manufacturing-ai-platform/
 ├── ml/             # feature engineering, model training, prediction, saved model artifacts
 ├── rag/            # synthetic documents, chunking/embedding, chroma_db, retrieval
 ├── orchestration/  # routing + LangChain chain tying ML + RAG + LLM together
+├── eval/           # evaluation harness: test cases + pass/fail report against the real pipeline
 ├── api/            # FastAPI app (/predict, /ask)
 ├── app/            # Streamlit chat + dashboard
 ├── docker/         # Dockerfile(s), docker-compose
@@ -371,8 +372,68 @@ uvicorn api.main:app --reload --port 8000
 streamlit run app/streamlit_app.py
 ```
 
-### Phase 5 — Evaluation harness
-*Not started yet.*
+### Phase 5 — Evaluation harness ✅
+
+**`eval/eval_cases.py`:** 12 test questions covering the shapes of question the assistant needs
+to handle correctly: a known machine with a real prediction, an unknown machine ID, a general
+question with no machine mentioned, questions naming a machine type by keyword instead of an ID
+(conveyor, pump, robot arm, press), an off-topic question with no relevant documentation, and a
+vague/nonsense input that should short-circuit before ever calling the LLM. Each case specifies
+**expected characteristics, not exact strings** — e.g. `answer_contains_any: ["healthy", "not at
+risk", "low risk", "0%"]` rather than a fixed sentence, since natural-language answers vary in
+wording even when they're correct; an exact-match check would mostly measure the model's phrasing
+choices, not whether the pipeline actually worked.
+
+**`eval/run_eval.py`:** runs every case through the real `ManufacturingAssistant` and checks two
+independent categories per case, reported separately so a failure says *where* the problem is:
+
+- **Structural checks** (free, deterministic, don't depend on the LLM's wording): did routing
+  extract the right machine ID? Did it correctly decide whether a prediction was needed? Did the
+  prediction come back found/not-found as expected? Did retrieval return chunks from the expected
+  machine type(s)? Did retrieval return at least the expected number of below-threshold-distance
+  chunks?
+- **Content checks** (require the real LLM call): does the generated answer contain at least one
+  of a small set of plausible keywords?
+
+This directly answers "how do you evaluate whether the RAG system is actually working" with a
+concrete artifact instead of "I read the outputs and it looked fine."
+
+**A real methodology bug found and fixed while testing the harness itself:** the first version of
+the `retrieval_machine_types` check required retrieved chunks to be a strict *subset* of the
+expected type(s) — e.g. a lockout/tagout question with no machine mentioned was checked to return
+*only* `GENERAL` docs. That's wrong: when no machine context is available, retrieval correctly
+searches the *entire* corpus unfiltered, so a LOTO question legitimately also surfaces per-machine
+troubleshooting SOPs that happen to mention lockout/tagout in passing — that's accurate retrieval
+behavior, not noise to penalize. Changed the check from subset to **overlap** (at least one chunk
+of an expected type must appear), which is both more correct and a more honest way to evaluate
+retrieval generally: real systems return some incidental cross-matches, and the metric that
+matters is whether the relevant result shows up, not whether irrelevant results never do. Caught
+this by actually running the harness against the pipeline and reading why a case failed, not by
+reasoning about the check in the abstract.
+
+**Testing note (sandbox limitation):** validated the harness mechanics themselves — not a real
+pass rate — using the same fake-LLM + offline-retrieval substitution as Phases 3-4
+(`eval/_sandbox_test_eval.py`, sandbox-only). With a canned fake answer, all structural checks
+passed correctly (11/11) and all content checks failed as expected (a canned string can't contain
+"healthy" or "cavitation"), confirming the check logic itself fires correctly before trusting it
+against a real model. Run `python -m eval.run_eval` locally with a real API key configured to get
+an actual evaluation report — it prints a per-case breakdown to the console and writes the full
+results to `eval/results.json` (gitignored, since it's a snapshot tied to whichever LLM/model
+version produced it, not something to track in version control).
+
+**Post-launch fix: the harness didn't survive a rate limit.** The first real run against Groq's
+free tier (8000 tokens/minute) hit a `RateLimitError` partway through the 12 cases — each question
+with retrieved-document context and/or an ML prediction folded into the prompt runs 1000+ tokens,
+and 12 of them back-to-back with no pacing exceeds that limit before finishing. Worse, the
+original loop let that exception propagate and crash the whole script, losing the results of every
+case that had already run successfully. Fixed two ways: (1) added a conservative delay between
+cases so a full run stays under typical free-tier limits, and (2) wrapped each case in its own
+try/except so one failure is recorded with its actual error message and the run continues —
+verified this with a test where a simulated exception on case 3 still produced a complete 12-case
+report. **Practical note:** don't run `eval.run_eval` (or `rag/build_index.py`) while `uvicorn` is
+running — both scripts and the API server open the same SQLite-backed Chroma file, and running
+them concurrently produced empty retrieval results in practice; stop the server first, run the
+script, then restart the server.
 
 ### Phase 6 — Containerize + document
 *Not started yet.*
