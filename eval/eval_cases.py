@@ -93,7 +93,8 @@ EVAL_CASES = [
         "min_relevant_chunks": 0,
         "answer_contains_any": [
             "no relevant", "don't have", "not related", "not able to", "no sufficiently relevant",
-            "no information", "not documented",
+            "no information", "not documented", "none of the documents", "doesn't relate",
+            "don't relate", "aren't related", "not about",
         ],
     },
     {

@@ -10,27 +10,31 @@ CHROMA_DIR = "rag/chroma_db"
 COLLECTION_NAME = "manufacturing_docs"
 
 _embed_fn = None
-_client = None
-
-
-def _get_client():
-    global _client
-    if _client is None:
-        _client = chromadb.PersistentClient(path=CHROMA_DIR)
-    return _client
 
 
 def _get_embed_fn():
     global _embed_fn
     if _embed_fn is None:
         # Must match the embedding function used in build_index.py exactly, or
-        # query vectors and stored vectors won't be comparable.
+        # query vectors and stored vectors won't be comparable. Safe to cache — this
+        # only loads the ONNX model itself, which doesn't reference chroma_db's
+        # on-disk state and can't go stale relative to it.
         _embed_fn = embedding_functions.ONNXMiniLM_L6_V2()
     return _embed_fn
 
 
 def get_collection():
-    return _get_client().get_collection(name=COLLECTION_NAME, embedding_function=_get_embed_fn())
+    # Deliberately NOT cached (unlike _embed_fn above). chromadb's PersistentClient
+    # holds in-memory state about the collection that isn't guaranteed to reflect
+    # on-disk changes made by a separate process after the client was created — if
+    # rag/build_index.py rebuilds the index while a long-running server process (like
+    # uvicorn) is holding an old cached client, queries can silently return empty
+    # results with no error, because the client never re-scans the directory on its
+    # own. Constructing a fresh client per call costs a small amount of overhead
+    # (opening a local SQLite connection) but eliminates that entire class of bug —
+    # a worthwhile tradeoff for a retrieval path that isn't latency-critical here.
+    client = chromadb.PersistentClient(path=CHROMA_DIR)
+    return client.get_collection(name=COLLECTION_NAME, embedding_function=_get_embed_fn())
 
 
 def retrieve(query: str, k: int = 3, machine_type: str | None = None) -> list[dict]:

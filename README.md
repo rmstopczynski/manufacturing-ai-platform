@@ -91,8 +91,15 @@ git clone <your-repo-url>
 cd manufacturing-ai-platform
 python -m venv venv && source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
-cp .env.example .env   # then add your OpenAI API key
+cp .env.example .env   # then add your LLM provider API key (Groq/xAI/OpenAI)
+python rag/build_index.py   # build the vector store before first run
 ```
+
+> **Important:** always fully stop `uvicorn` before re-running `rag/build_index.py` or
+> `eval/run_eval.py`, and restart `uvicorn` afterward. A running server process can hold stale
+> in-memory state about the Chroma collection that doesn't reflect a rebuild done by a separate
+> process — queries will silently return zero results with no error rather than picking up the
+> new data. See the Phase 5 build log below for the full root-cause writeup.
 
 ---
 
@@ -430,10 +437,35 @@ case that had already run successfully. Fixed two ways: (1) added a conservative
 cases so a full run stays under typical free-tier limits, and (2) wrapped each case in its own
 try/except so one failure is recorded with its actual error message and the run continues —
 verified this with a test where a simulated exception on case 3 still produced a complete 12-case
-report. **Practical note:** don't run `eval.run_eval` (or `rag/build_index.py`) while `uvicorn` is
-running — both scripts and the API server open the same SQLite-backed Chroma file, and running
-them concurrently produced empty retrieval results in practice; stop the server first, run the
-script, then restart the server.
+report.
+
+**Root cause found and fixed: retrieval intermittently returned zero chunks with no error.**
+Running the harness sometimes produced `retrieval_machine_types: actual=set()` on every case —
+including fully unfiltered queries — meaning the Chroma collection was silently returning nothing,
+not just filtering incorrectly. Traced this to a real quirk in this chromadb version: a
+long-running process (like `uvicorn`) that has ever queried a collection keeps in-memory state
+about it that isn't guaranteed to reflect changes made by a *separate* process (e.g. re-running
+`rag/build_index.py` to rebuild the index) — the running server never re-scans the directory on
+its own, so it can keep serving stale/empty results indefinitely with no exception raised.
+Reproduced this directly: even constructing a brand-new `PersistentClient` object for the same
+path, after the directory had been deleted and recreated, still returned `Collection already
+exists` from chromadb's internal registry — confirming this is chromadb-internal per-process
+state, not a bug in this project's own caching. Two fixes: (1) `rag/retrieve.py` no longer caches
+the Chroma client across requests (a `PersistentClient` is cheap enough to construct fresh each
+call, and doing so at least removes this project's own layer of caching from the failure
+surface), and (2) **the operational rule that actually matters: always fully restart `uvicorn`
+after rebuilding the index, every time, even if you're not sure it touched the collection yet.**
+Confirmed with a controlled test — closing every process, running `build_index.py` then
+`eval.run_eval` in one single fresh process with nothing else ever having touched the collection
+— which came back **11/12 cases fully passed, 50/51 individual checks**, zero empty retrievals.
+The one remaining failure was a real gap in the eval's own keyword list, not the pipeline: the
+model correctly said "none of the documents relate to quantum computing," which my original
+keyword list for that case didn't anticipate — broadened it once the actual pipeline behavior was
+confirmed correct, rather than loosening a check to paper over an actual bug (a distinction worth
+being explicit about — the fix targeted the right layer). **Practical rule going forward: don't
+run `eval.run_eval` or `rag/build_index.py` while `uvicorn` is running, and always restart
+`uvicorn` after any index rebuild — this isn't a one-time gotcha, it's chromadb's actual
+behavior in this version.**
 
 ### Phase 6 — Containerize + document
 *Not started yet.*

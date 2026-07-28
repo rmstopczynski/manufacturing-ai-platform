@@ -34,6 +34,7 @@ legitimate infra/deployment tradeoff worth being able to explain, not just a bug
 
 import json
 import os
+import shutil
 import chromadb
 from chromadb.utils import embedding_functions
 
@@ -99,13 +100,18 @@ def build_index():
     # run through onnxruntime instead of PyTorch — see module docstring for why.
     embed_fn = embedding_functions.ONNXMiniLM_L6_V2()
 
+    # Full filesystem wipe before rebuilding, not client.delete_collection(). Chroma's
+    # delete_collection() only removes the SQLite metadata row for the collection — it
+    # does NOT delete the UUID-named segment directories holding the actual binary
+    # index data (data_level0.bin etc.). Every re-run of this script was leaving a new
+    # orphaned segment folder behind, accumulating stale data on disk indefinitely.
+    # A full directory removal guarantees a genuinely clean rebuild every time.
+    if os.path.exists(CHROMA_DIR):
+        shutil.rmtree(CHROMA_DIR)
+    os.makedirs(CHROMA_DIR, exist_ok=True)
+    open(os.path.join(CHROMA_DIR, ".gitkeep"), "a").close()
+
     client = chromadb.PersistentClient(path=CHROMA_DIR)
-    # Fresh collection each run, so re-running this script after editing documents
-    # doesn't leave stale chunks behind.
-    try:
-        client.delete_collection(COLLECTION_NAME)
-    except Exception:
-        pass
     collection = client.create_collection(name=COLLECTION_NAME, embedding_function=embed_fn)
 
     collection.add(
