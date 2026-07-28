@@ -1,0 +1,29 @@
+# Orchestrates the FastAPI backend and Streamlit frontend as two separate services on
+# a shared network, matching how this would actually be deployed rather than as a
+# single monolithic container. The Streamlit service reaches the API at
+# http://api:8000 — Docker Compose's internal DNS resolves the service name "api" to
+# the right container automatically, which is exactly what API_BASE_URL in
+# app/streamlit_app.py was already built to support (an env var, not a hardcoded
+# localhost URL) — no code changes needed to run this in Compose vs. running both
+# processes locally.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://api:8000
+    depends_on:
+      - api

@@ -11,7 +11,9 @@ chatbot built for natural-language metadata search. This project builds an analo
 to end, from raw data through a deployed API and chat UI, so I own every layer of the stack rather
 than evaluating tooling built by someone else.
 
-**Status:** 🚧 In progress — see [Build Log](#build-log) below for what's done so far.
+**Status:** ✅ All 6 phases complete (data → model → RAG → orchestration → API/UI → eval → Docker).
+See the [Build Log](#build-log) below for what was actually built, tested, and — in a few honest
+cases — debugged, at each phase.
 
 ---
 
@@ -79,7 +81,9 @@ manufacturing-ai-platform/
 ├── eval/           # evaluation harness: test cases + pass/fail report against the real pipeline
 ├── api/            # FastAPI app (/predict, /ask)
 ├── app/            # Streamlit chat + dashboard
-├── docker/         # Dockerfile(s), docker-compose
+├── docker/         # Dockerfile.api, Dockerfile.streamlit
+├── docker-compose.yml
+├── .dockerignore
 ├── requirements.txt
 └── .env.example
 ```
@@ -100,6 +104,19 @@ python rag/build_index.py   # build the vector store before first run
 > in-memory state about the Chroma collection that doesn't reflect a rebuild done by a separate
 > process — queries will silently return zero results with no error rather than picking up the
 > new data. See the Phase 5 build log below for the full root-cause writeup.
+
+### Running with Docker
+
+```bash
+cp .env.example .env   # add your LLM provider API key first
+docker compose up --build
+```
+
+This builds and starts both services — the FastAPI backend at `http://localhost:8000` and the
+Streamlit UI at `http://localhost:8501` — with no manual setup steps in between. The API image's
+build process runs the full data-generation → model-training → document-indexing pipeline at
+`docker build` time (see `docker/Dockerfile.api`), so the container is immediately runnable the
+moment it starts, not dependent on scripts being run separately first.
 
 ---
 
@@ -467,8 +484,44 @@ run `eval.run_eval` or `rag/build_index.py` while `uvicorn` is running, and alwa
 `uvicorn` after any index rebuild — this isn't a one-time gotcha, it's chromadb's actual
 behavior in this version.**
 
-### Phase 6 — Containerize + document
-*Not started yet.*
+### Phase 6 — Containerize + document ✅
+
+**`docker/Dockerfile.api` and `docker/Dockerfile.streamlit`:** two separate images, one per
+service, rather than a single monolithic container — matches how this would actually be deployed
+(independently scalable, independently deployable) and matches the existing HTTP-based separation
+between the Streamlit UI and the FastAPI backend from Phase 4. The API image bakes the full
+data-generation → feature-engineering → model-training → document-generation → vector-indexing
+pipeline into the **build** step (not a runtime setup script), so `docker compose up` alone
+produces an immediately working system with no manual setup steps — this is fully reproducible
+since sensor data generation is seeded, the synthetic documents are hand-authored (not randomly
+generated), and the XGBoost training uses a fixed `random_state`. The Streamlit image only
+generates the raw sensor CSV (needed for its dashboard's machine-ID list) — duplicating the model
+training and index building there would waste build time on artifacts that service never touches
+directly, since it only talks to the API over HTTP.
+
+**`docker-compose.yml`:** orchestrates both services on Compose's internal network. The Streamlit
+container reaches the API at `http://api:8000` — Compose's built-in DNS resolves the service name
+automatically — which required zero code changes, since `API_BASE_URL` was already an
+environment variable in `app/streamlit_app.py` (Phase 4), not a hardcoded `localhost` URL.
+
+**Security note:** `.env` (containing the real LLM API key) is explicitly excluded via
+`.dockerignore`, so it's never baked into an image layer. At runtime, Compose's `env_file:`
+directive injects the variables directly into the container's environment instead — the same
+`load_dotenv()` call from Phase 3 silently no-ops if no `.env` file is present inside the
+container (it doesn't error), so this required no code changes either.
+
+**Testing limitation, stated plainly:** this sandbox doesn't have a `docker` binary available, so
+`docker build`/`docker compose up` could not be executed here the way every other phase's code was
+directly run and tested — I verified what I could statically (relative paths matching
+`WORKDIR /app`, valid YAML, the `.env` exclusion logic) and flagged it explicitly as unverified
+rather than claiming it worked. **Update: confirmed working on first real test.** `docker compose
+up --build` completed cleanly — both images built, both containers started with no errors, the API
+logged `Application startup complete` and `Uvicorn running on http://0.0.0.0:8000`, and the
+Streamlit UI came up on `0.0.0.0:8501` with the real trained model and vector index baked into the
+API image exactly as designed. Worth noting honestly: this is the one phase where careful static
+review had to substitute for actually running the code before handing it off, and it happened to
+work on the first try — a genuinely different (and less certain) level of confidence than every
+other phase in this build log, where the code was run and iterated on directly.
 
 ---
 

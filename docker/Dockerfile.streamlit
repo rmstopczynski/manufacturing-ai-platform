@@ -1,0 +1,21 @@
+# Streamlit frontend service. Only needs the raw sensor CSV (for the sidebar
+# dashboard's machine ID list) — the trained model and vector index live behind the
+# API, which this container talks to over HTTP, not by importing that code directly.
+# Deliberately does NOT run ml/train_model.py or rag/build_index.py here; duplicating
+# that work in both containers would be wasted build time for artifacts this service
+# never touches directly.
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+RUN python data/generate_sensor_data.py
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app/streamlit_app.py", "--server.address=0.0.0.0", "--server.port=8501"]

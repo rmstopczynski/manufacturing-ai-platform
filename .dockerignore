@@ -1,0 +1,25 @@
+# Local env/venv — never bake real API keys into an image; passed in at `docker run`
+# via env_file instead.
+.env
+venv/
+__pycache__/
+*.pyc
+
+# Git metadata
+.git/
+.gitignore
+
+# Locally-generated artifacts — these get regenerated fresh inside the image build
+# (see docker/Dockerfile.api), so copying host-generated versions into the build
+# context is unnecessary and would make builds depend on whatever state happens to
+# exist on the host machine rather than being self-contained.
+data/raw/*.csv
+data/processed/*.csv
+ml/models/*.joblib
+rag/chroma_db/*
+
+# Misc
+*.zip
+.DS_Store
+.vscode/
+.idea/

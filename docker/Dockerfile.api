@@ -1,0 +1,39 @@
+# FastAPI backend service. Bakes in the full data/model/index build at image build
+# time (synthetic sensor data -> trained model -> synthetic documents -> vector
+# index) rather than requiring manual setup steps after `docker run` — the point of
+# containerizing is that `docker compose up` alone gets you a fully working system.
+#
+# This is fully reproducible: sensor data generation is seeded (Faker.seed(42),
+# np.random.seed(42)), the synthetic documents are hand-authored templates (not
+# randomly generated), and the XGBoost model uses a fixed random_state — so every
+# image build produces the same data and the same trained model.
+#
+# Requires network access during build (to download the ONNX embedding model in
+# rag/build_index.py) — same as running these scripts locally, not a Docker-specific
+# requirement.
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies first (separate layer) so `docker build` can cache this step
+# and skip reinstalling every dependency on every code change — only requirements.txt
+# changes invalidate this layer.
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Build all backend artifacts inside the image: synthetic sensor data -> features ->
+# trained model, and synthetic documents -> chunked -> embedded -> indexed. None of
+# this depends on an LLM API key — that's only needed at runtime for the /ask
+# endpoint's actual LLM call, passed in via environment variables at `docker run`.
+RUN python data/generate_sensor_data.py && \
+    python ml/feature_engineering.py && \
+    python ml/train_model.py && \
+    python rag/generate_documents.py && \
+    python rag/build_index.py
+
+EXPOSE 8000
+
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
